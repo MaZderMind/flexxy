@@ -1,52 +1,100 @@
 package de.mazdermind.prettycodegen.template;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
+import java.util.stream.Collectors;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import javax.script.Invocable;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
+
+import org.apache.velocity.Template;
+import org.apache.velocity.app.VelocityEngine;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import de.mazdermind.prettycodegen.template.exceptions.GeneratorPreprocessorException;
+import de.mazdermind.prettycodegen.template.exceptions.GeneratorTemplateException;
+import groovy.lang.GroovyShell;
 import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 
 @UtilityClass
+@Slf4j
 public class TemplateLoader {
 
 	private static final String TEMPLATE_INFO_FILE = "info.json";
 
 	public static GeneratorTemplate loadTemplate(Path templatePath) {
-		// TODO validate
+		// TODO validation
 		Info info = loadInfo(templatePath);
+
+		VelocityEngine velocityEngine = new VelocityEngine();
+		velocityEngine.setProperty("resource.loader.file.path", templatePath.toString());
 
 		return new GeneratorTemplate()
 				.setInfo(info)
-				.setFilenamePreprocessor(loadPreprocessor(templatePath, info.getFilenamePreprocessor()))
-				.setApiTemplate(info.getApiTemplate())
-				.setApiPreprocessor(loadPreprocessor(templatePath, info.getApiPreprocessor()))
-				.setSchemaTemplate(info.getSchemaTemplate())
-				.setSchemaPreprocessor(loadPreprocessor(templatePath, info.getSchemaPreprocessor()))
-				.setAdditionalTemplates(info.getAdditionalTemplates());
+				.setApiTemplate(loadTemplateFile(velocityEngine, templatePath, info.getApiTemplate()))
+				.setSchemaTemplate(loadTemplateFile(velocityEngine, templatePath, info.getSchemaTemplate()))
+				.setAdditionalTemplates(loadAdditionalTemplates(velocityEngine, templatePath, info.getAdditionalTemplates()))
+				.setPreprocessor(loadPreprocessor(templatePath, info.getPreprocessor()));
 	}
 
-	@SneakyThrows
-	public static PreprocessorRef loadPreprocessor(Path templatePath, @Nullable String preprocessorFilename) {
+	private static Map<String, Template> loadAdditionalTemplates(VelocityEngine velocityEngine, Path templatePath, Map<String, String> additionalTemplates) {
+		return additionalTemplates.entrySet().stream()
+				.collect(Collectors.toMap(
+						Map.Entry::getKey,
+						e -> loadTemplateFile(velocityEngine, templatePath, e.getValue())
+				));
+	}
+
+	private static Template loadTemplateFile(VelocityEngine velocityEngine, Path templatePath, String templateFilename) {
+		Path templateFile = templatePath.resolve(templateFilename);
+		log.debug("Loading Template-Tile: {}", templateFile);
+
+		if (!templateFilename.endsWith(".vm")) {
+			throw new GeneratorTemplateException("Template must be a .vm File, was " + templateFilename);
+		}
+
+		return velocityEngine.getTemplate(templateFilename, StandardCharsets.UTF_8.name());
+	}
+
+	@Nonnull
+	public static IPreprocessor loadPreprocessor(Path templatePath, @Nullable String preprocessorFilename) {
 		if (preprocessorFilename == null) {
-			return new PreprocessorRef();
+			log.info("Not Loading a Preprocessor, because the Template did not specify one");
+
+			return new IPreprocessor() {
+			};
 		}
 
 		Path preprocessorFile = templatePath.resolve(preprocessorFilename);
-		String javascriptString = Files.readString(preprocessorFile, StandardCharsets.UTF_8);
+		log.info("Loading Preprocessor {}", preprocessorFile);
 
-		ScriptEngine engine = new ScriptEngineManager().getEngineByMimeType("application/javascript");
-		engine.eval(javascriptString);
+		GroovyShell shell = new GroovyShell();
+		Object preprocessor;
+		try {
+			preprocessor = shell.evaluate(preprocessorFile.toFile());
+		} catch (IOException e) {
+			throw new GeneratorPreprocessorException(String.format(
+					"Error evaluating specified Preprocessor File: %s", preprocessorFilename), e);
+		}
 
-		return new PreprocessorRef((Invocable) engine);
+		if (preprocessor == null) {
+			throw new GeneratorPreprocessorException(String.format(
+					"Specified Preprocessor File did not return a Value %s", preprocessorFilename));
+		}
+		if (!(preprocessor instanceof IPreprocessor)) {
+			throw new GeneratorPreprocessorException(String.format(
+					"Specified Preprocessor File return a Value that does not implement IPreprocessor, was %s", preprocessor.getClass()));
+		}
+
+		log.debug("Loaded Preprocessor");
+		return (IPreprocessor) preprocessor;
 	}
 
 	@SneakyThrows

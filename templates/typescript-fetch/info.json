@@ -45,13 +45,12 @@
 		"with",
 		"yield"
 	],
-	"filenamePreprocessor": "filename-preprocessor.js",
-	"schemaTemplate": "schemas/schema.th",
-	"schemaPreprocessor": "schemas/preprocessor.js",
-	"apiTemplate": "apis/model.th",
+	"preprocessor": "preprocessor.groovy",
+	"schemaTemplate": "schemas/schema.vm",
+	"apiTemplate": "apis/api.vm",
 	"additionalTemplates": {
-		"index.ts": "index.th",
-		"apis/index.ts": "apis/index.th",
-		"schemas/index.ts": "schemas/index.th"
+		"index.ts": "index.vm",
+		"apis/index.ts": "apis/index.vm",
+		"schemas/index.ts": "schemas/index.vm"
 	}
 }

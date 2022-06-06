@@ -2,6 +2,8 @@ package de.mazdermind.prettycodegen.template;
 
 import java.util.Map;
 
+import org.apache.velocity.Template;
+
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -10,13 +12,9 @@ import lombok.experimental.Accessors;
 public class GeneratorTemplate {
 	private Info info;
 
-	private PreprocessorRef filenamePreprocessor;
+	private IPreprocessor preprocessor;
 
-	private String schemaTemplate;
-	private PreprocessorRef schemaPreprocessor;
-
-	private String apiTemplate;
-	private PreprocessorRef apiPreprocessor;
-
-	private Map<String, String> additionalTemplates;
+	private Template schemaTemplate;
+	private Template apiTemplate;
+	private Map<String, Template> additionalTemplates;
 }

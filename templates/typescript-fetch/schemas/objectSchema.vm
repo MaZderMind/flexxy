@@ -1,0 +1,21 @@
+export interface $schemaName {
+#foreach($entry in $schema.properties.entrySet())
+    #if($entry.value.description)
+    /**
+     * $entry.value.description
+     */
+    #end
+    $entry.key#if(!$entry.value.required)?#end: ${propertyTypes.getOrDefault($entry.key, "any")};
+#if($foreach.hasNext)
+## New-Line between Items
+
+#end
+#end
+}
+#foreach($enum in $enums)
+
+/**
+ * Values for {@link $enum.schemaName#$enum.propertyName}
+ */
+#parse('schemas/enumSchema.vm')
+#end

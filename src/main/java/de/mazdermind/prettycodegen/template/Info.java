@@ -11,13 +11,10 @@ import lombok.experimental.Accessors;
 public class Info {
 	private List<String> reservedWords;
 
-	private String filenamePreprocessor;
+	private String preprocessor;
 
 	private String schemaTemplate;
-	private String schemaPreprocessor;
-
 	private String apiTemplate;
-	private String apiPreprocessor;
 
 	private Map<String, String> additionalTemplates;
 }

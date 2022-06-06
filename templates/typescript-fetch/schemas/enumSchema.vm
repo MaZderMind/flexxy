@@ -1,0 +1,5 @@
+export enum ${enum.key} {
+#foreach($enumItem in $enum.items)
+    $enumItem.key = '$enumItem.value',
+#end
+}
