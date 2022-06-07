@@ -49,34 +49,44 @@ class Preprocessor implements IPreprocessor {
     @Override
     Map<String, Object> additionalSchemaTemplateArgs(String schemaName, Schema schema) {
         def imports = [] as Set<String>
-        def properties = properties(schemaName, schema, imports)
-        def enums = propertyEnums(schemaName, schema)
+        def enums = new ArrayList<Map<String, Object>>()
+        def properties = properties(schemaName, schema, imports, enums)
+        def additionalProperties = additionalProperties(schema, imports, schemaName, enums)
+
+        imports.remove(schemaName)
+
         log.debug("Properties for {}: {}", schemaName, properties)
         log.debug("Imports for {}: {}", schemaName, imports)
         log.debug("Enums for {}: {}", schemaName, enums)
+        log.debug("AdditionalProperties for {}: {}", schemaName, additionalProperties)
 
         return [
-                properties: properties,
-                imports   : imports,
-                enums     : enums,
+                properties          : properties,
+                imports             : imports,
+                enums               : enums,
+                additionalProperties: additionalProperties,
         ]
     }
 
-    static List<Map<String, Object>> properties(String schemaName, Schema schema, Set<String> imports) {
+    static List<Map<String, Object>> properties(String schemaName, Schema schema, Set<String> imports,
+                                                List<Map<String, Object>> enums) {
         schema.properties.collect {
             [
                     key        : it.key,
                     field      : quoteFieldIfNecessary(it.key),
-                    description: it.value.description,
+                    description: sanitizeDescription(it.value.description),
                     required   : schema.required?.contains(it.key),
-                    type       : mapType(it.value, imports, schemaName, it.key),
+                    type       : mapType(it.value, imports, schemaName, it.key, enums),
             ]
         } as List<Map<String, Object>>
     }
 
-    static String mapType(Schema schema, Set<String> imports, String schemaName, String propertyName) {
+    static String mapType(Schema schema, Set<String> imports, String schemaName, String propertyName,
+                          List<Map<String, Object>> enums) {
         if (schema.type == "string" && schema.enum) {
-            return "${schemaName}${propertyName.capitalize()}Enum"
+            def enumName = "${schemaName}${propertyName.capitalize()}Enum"
+            enums.add(propertyEnum(schemaName, propertyName, enumName, schema.enum))
+            return enumName
         } else if (schema.type in ["string", "float", "number", "boolean"]) {
             return schema.type
         } else if (schema.type in ["integer"]) {
@@ -84,32 +94,32 @@ class Preprocessor implements IPreprocessor {
         } else if (schema instanceof ComposedSchema) {
             if (schema.allOf) {
                 return schema.allOf
-                        .collect { mapType(it, imports, schemaName, propertyName) }
+                        .collect { mapType(it, imports, schemaName, propertyName, enums) }
                         .each { imports.add(it) }
                         .join(" & ")
             } else if (schema.anyOf) {
                 return schema.anyOf
-                        .collect { mapType(it, imports, schemaName, propertyName) }
+                        .collect { mapType(it, imports, schemaName, propertyName, enums) }
                         .each { imports.add(it) }
                         .join(" | ")
             } else if (schema.oneOf) {
                 return schema.oneOf
-                        .collect { mapType(it, imports, schemaName, propertyName) }
+                        .collect { mapType(it, imports, schemaName, propertyName, enums) }
                         .each { imports.add(it) }
                         .join(" | ")
             }
 
             return "any"
         } else if (schema instanceof ArraySchema) {
-            return mapType(schema.items, imports, schemaName, propertyName) + '[]'
+            return mapType(schema.items, imports, schemaName, propertyName, enums) + '[]'
         } else if (schema.$ref) {
             def schemaRef = stripRefPrefix(schema.$ref)
             imports.add(schemaRef)
             return schemaRef
-        } else if (schema.additionalProperties) {
+        } else if (schema.additionalProperties && !schema.properties) {
             // Inline Dict
             if (schema.additionalProperties instanceof Schema) {
-                def additionalPropertiesType = mapType(schema.additionalProperties as Schema, imports, schemaName, propertyName)
+                def additionalPropertiesType = mapType(schema.additionalProperties as Schema, imports, schemaName, propertyName, enums)
                 return "{ [key: string]: ${additionalPropertiesType}; }"
             } else {
                 return "{ [key: string]: any; }"
@@ -122,17 +132,13 @@ class Preprocessor implements IPreprocessor {
         return "any"
     }
 
-    static List<Map<String, Object>> propertyEnums(String schemaName, Schema schema) {
-        schema.properties
-                .findAll { it.value.type == "string" && it.value.enum }
-                .collect {
-                    [
-                            schemaName  : schemaName,
-                            propertyName: it.key,
-                            key         : "${schemaName}${it.key.capitalize()}Enum",
-                            items       : mapEnumItems(it.value.enum),
-                    ]
-                }
+    static TreeMap<String, Object> propertyEnum(String schemaName, String propertyName, enumName, List<String> enumItems) {
+        [
+                schemaName  : schemaName,
+                propertyName: propertyName,
+                key         : enumName,
+                items       : mapEnumItems(enumItems),
+        ]
     }
 
     static List<Map<String, String>> mapEnumItems(List<String> enumItems) {
@@ -145,11 +151,36 @@ class Preprocessor implements IPreprocessor {
     }
 
     static String quoteFieldIfNecessary(String fieldKey) {
-        if (fieldKey[0].isNumber()) {
+        def startsWithNumber = fieldKey[0].isNumber()
+        def containsSpaces = fieldKey.contains(" ")
+        def containsDashes = fieldKey.contains("-")
+        if (startsWithNumber || containsSpaces || containsDashes) {
             return "'${fieldKey}'"
         }
 
         return fieldKey
+    }
+
+    static Object additionalProperties(Schema schema, Set<String> imports, String schemaName, List<Map<String, Object>> enums) {
+        if (schema.additionalProperties == null || schema.additionalProperties == false) {
+            return false
+        } else if (schema.additionalProperties instanceof Schema) {
+            return mapType(schema.additionalProperties as Schema, imports, schemaName, "AdditionalProperties", enums)
+        } else {
+            return "any"
+        }
+    }
+
+    static String sanitizeDescription(String description) {
+        if (description == null) {
+            return null
+        }
+
+        description
+                .replace("&", "&amp;")
+                .replace("*/", "&#42;/")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
     }
 }
 

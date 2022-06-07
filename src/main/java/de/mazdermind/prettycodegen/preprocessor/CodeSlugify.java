@@ -3,6 +3,7 @@ package de.mazdermind.prettycodegen.preprocessor;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.codehaus.groovy.runtime.StringGroovyMethods;
@@ -13,6 +14,7 @@ import com.google.common.collect.ImmutableMap;
 
 import lombok.experimental.UtilityClass;
 
+// TODO Tests
 @UtilityClass
 public class CodeSlugify {
 	private static final Map<String, String> REPLACEMENTS = ImmutableMap.<String, String>builder()
@@ -26,6 +28,7 @@ public class CodeSlugify {
 			.put("<", "smaller then")
 			.put("=", "equal").build();
 
+	private static final Pattern SPLITTER = Pattern.compile("((?<=\\p{Ll})(?=\\p{Lu})|[^\\p{L}])");
 	private static final Slugify SLUGIFY = new Slugify().withCustomReplacements(REPLACEMENTS);
 
 	private static String slugifyPrefix(String s) {
@@ -42,9 +45,11 @@ public class CodeSlugify {
 	}
 
 	private static List<String> slugifyToWords(String s) {
-		return Arrays.asList(
-				SLUGIFY.slugify(s).split("_")
-		);
+		return Arrays.stream(SPLITTER.split(s))
+				.flatMap(word -> Arrays.stream(
+						SLUGIFY.slugify(word).split("-")
+				))
+				.collect(Collectors.toList());
 	}
 
 	// fooBarMoo

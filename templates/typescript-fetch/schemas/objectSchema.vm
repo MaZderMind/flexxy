@@ -11,6 +11,13 @@ export interface $schemaName {
 
 #end
 #end
+#if($additionalProperties)
+
+    /**
+     * Additional Properties
+     */
+    [key: string]: ${additionalProperties};
+#end
 }
 #foreach($enum in $enums)
 

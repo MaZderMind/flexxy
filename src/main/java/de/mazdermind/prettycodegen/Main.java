@@ -10,7 +10,7 @@ public class Main {
 	public static void main(String[] args) throws IOException {
 		// TODO cli parsing & validation
 		Configuration configuration = new Configuration()
-				.setSourceLocation("/Users/pkoerner/Code/pretty-codegen/min.json")
+				.setSourceLocation("/Users/pkoerner/Code/pretty-codegen/swagger-v3.v3-patched.json")
 				.setTargetDirectory("/Users/pkoerner/Code/pretty-codegen/output/jira/")
 				.setTemplate("/Users/pkoerner/Code/pretty-codegen/templates/typescript-fetch");
 

@@ -1,6 +1,9 @@
 #!/bin/bash
 set -euo pipefail
 
+echo "Format swagger-json"
+jq < swagger-v3.v3.json >swagger-v3.v3-formated.json
+
 echo "Patch up swagger-json"
 jq '
   # Patch up StringList with actual string
