@@ -1,11 +1,11 @@
 export interface $schemaName {
-#foreach($entry in $schema.properties.entrySet())
-    #if($entry.value.description)
+#foreach($property in $properties)
+    #if($property.description)
     /**
-     * $entry.value.description
+     * $property.description
      */
     #end
-    $entry.key#if(!$entry.value.required)?#end: ${propertyTypes.getOrDefault($entry.key, "any")};
+    $property.field#if(!$property.required)?#end: ${property.type};
 #if($foreach.hasNext)
 ## New-Line between Items
 

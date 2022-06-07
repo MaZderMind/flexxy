@@ -49,23 +49,29 @@ class Preprocessor implements IPreprocessor {
     @Override
     Map<String, Object> additionalSchemaTemplateArgs(String schemaName, Schema schema) {
         def imports = [] as Set<String>
-        def types = propertyTypes(schemaName, schema, imports)
+        def properties = properties(schemaName, schema, imports)
         def enums = propertyEnums(schemaName, schema)
-        log.debug("Property-Types for {}: {}", schemaName, types)
+        log.debug("Properties for {}: {}", schemaName, properties)
         log.debug("Imports for {}: {}", schemaName, imports)
         log.debug("Enums for {}: {}", schemaName, enums)
 
         return [
-                propertyTypes: types,
-                imports      : imports,
-                enums        : enums,
+                properties: properties,
+                imports   : imports,
+                enums     : enums,
         ]
     }
 
-    static Map<String, String> propertyTypes(String schemaName, Schema schema, Set<String> imports) {
-        schema.properties.collectEntries {
-            [it.key, mapType(it.value, imports, schemaName, it.key)]
-        }
+    static List<Map<String, Object>> properties(String schemaName, Schema schema, Set<String> imports) {
+        schema.properties.collect {
+            [
+                    key        : it.key,
+                    field      : quoteFieldIfNecessary(it.key),
+                    description: it.value.description,
+                    required   : schema.required?.contains(it.key),
+                    type       : mapType(it.value, imports, schemaName, it.key),
+            ]
+        } as List<Map<String, Object>>
     }
 
     static String mapType(Schema schema, Set<String> imports, String schemaName, String propertyName) {
@@ -136,6 +142,14 @@ class Preprocessor implements IPreprocessor {
                     value: it,
             ]
         })
+    }
+
+    static String quoteFieldIfNecessary(String fieldKey) {
+        if (fieldKey[0].isNumber()) {
+            return "'${fieldKey}'"
+        }
+
+        return fieldKey
     }
 }
 
