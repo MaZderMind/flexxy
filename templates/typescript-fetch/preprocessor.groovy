@@ -144,7 +144,7 @@ class Preprocessor implements IPreprocessor {
     static List<Map<String, String>> mapEnumItems(List<String> enumItems) {
         enumItems.collect({
             [
-                    key  : CodeSlugify.constCase(it),
+                    key  : it.isEmpty() ? "EMPTY" : CodeSlugify.constCase(it),
                     value: it,
             ]
         })

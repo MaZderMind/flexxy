@@ -52,13 +52,13 @@ public class Generator {
 		log.info("Generating Output-Files for Schemas");
 		openApi.getComponents().getSchemas().forEach((name, schema) ->
 				generateSchema(
-						Paths.get(configuration.getTargetDirectory()),
+						Paths.get(configuration.getDestinationDirectory()),
 						name, schema, openApi, generatorTemplate
 				));
 	}
 
 	@SneakyThrows
-	private void generateSchema(Path targetDirectory, String schemaName, Schema schema, OpenAPI openApi, GeneratorTemplate generatorTemplate) {
+	private void generateSchema(Path destinationDirectory, String schemaName, Schema schema, OpenAPI openApi, GeneratorTemplate generatorTemplate) {
 		log.debug("Checking Preprocessor if a Schema-File should be generated for Schema {}", schemaName);
 		if (!generatorTemplate.getPreprocessor().shouldGenerateSchema(schemaName, schema)) {
 			log.info("Not generating a Schema-File for {} because the preprocessor did deny it", schemaName);
@@ -80,7 +80,7 @@ public class Generator {
 		String output = renderTemplate(generatorTemplate.getSchemaTemplate(), context);
 
 		String schemaFilename = generatorTemplate.getPreprocessor().generateSchemaFilename(schemaName, schema);
-		Path schemaPath = targetDirectory.resolve(schemaFilename);
+		Path schemaPath = destinationDirectory.resolve(schemaFilename);
 
 		Path parentPath = schemaPath.getParent();
 		if (!parentPath.toFile().exists()) {

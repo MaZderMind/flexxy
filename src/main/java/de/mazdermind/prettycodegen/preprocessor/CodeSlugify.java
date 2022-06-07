@@ -6,8 +6,6 @@ import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import org.codehaus.groovy.runtime.StringGroovyMethods;
-
 import com.github.slugify.Slugify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -28,15 +26,15 @@ public class CodeSlugify {
 			.put("<", "smaller then")
 			.put("=", "equal").build();
 
-	private static final Pattern SPLITTER = Pattern.compile("((?<=\\p{Ll})(?=\\p{Lu})|[^\\p{L}])");
+	private static final Pattern WORD_CASE_SPLITTER = Pattern.compile("((?<=\\p{Ll})(?=\\p{Lu})])");
 	private static final Slugify SLUGIFY = new Slugify().withCustomReplacements(REPLACEMENTS);
 
 	private static String slugifyPrefix(String s) {
-		if (StringGroovyMethods.getAt(s, 0).equals("-")) {
+		if (s.charAt(0) == '-') {
 			return "minus " + s.substring(1);
-		} else if (StringGroovyMethods.getAt(s, 0).equals("+")) {
+		} else if (s.charAt(0) == '+') {
 			return "plus " + s.substring(1);
-		} else if (StringGroovyMethods.getAt(s, 0).equals("_")) {
+		} else if (s.charAt(0) == '_') {
 			return "underscore " + s.substring(1);
 		}
 
@@ -45,7 +43,7 @@ public class CodeSlugify {
 	}
 
 	private static List<String> slugifyToWords(String s) {
-		return Arrays.stream(SPLITTER.split(s))
+		return Arrays.stream(WORD_CASE_SPLITTER.split(s))
 				.flatMap(word -> Arrays.stream(
 						SLUGIFY.slugify(word).split("-")
 				))
