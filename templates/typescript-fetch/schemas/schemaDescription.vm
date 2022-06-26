@@ -1,0 +1,5 @@
+#if($schema.description)
+/**
+ * $schema.description
+ */
+#end

@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory
 
 //def schemaPreprocessor = evaluate(new File("./preprocessor/SchemaPreprocessor.groovy"))
 
-// TODO Reusable enums
 class Preprocessor implements IPreprocessor {
     static log = LoggerFactory.getLogger("de.mazdermind.prettycodegen.template.typescriptFetch.Preprocessor")
 
@@ -112,13 +111,10 @@ class Preprocessor implements IPreprocessor {
                 return "{ [key: string]: any; }"
             }
         } else if (schema.type == "object" && schema.properties) {
-            def innerClassName = "${schemaName}${propertyName.capitalize()}"
+            def innerClassName = "${schemaName}${propertyName.capitalize()}Type"
 
             def properties = properties(innerClassName, schema, imports, enums, innerSchemas)
             def additionalProperties = additionalProperties(schema, imports, innerClassName, enums, innerSchemas)
-
-            log.debug("Properties for {}: {}", innerClassName, properties)
-            log.debug("Imports for {}: {}", innerClassName, imports)
 
             innerSchemas.put(innerClassName.toString(), ImmutableMap.of(
                     "schema", schema,
@@ -128,10 +124,6 @@ class Preprocessor implements IPreprocessor {
 
             return innerClassName
         }
-
-
-        // FIXME additionalProperties only -> map to dict
-        // FIXME additionalProperties + properties -> additional dict property
 
         return "any"
     }
