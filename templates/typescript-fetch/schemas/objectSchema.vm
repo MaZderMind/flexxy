@@ -19,10 +19,3 @@ export interface $schemaName {
     [key: string]: ${additionalProperties};
 #end
 }
-#foreach($enum in $enums)
-
-/**
- * Values for {@link $enum.schemaName#$enum.propertyName}
- */
-#parse('schemas/enumSchema.vm')
-#end

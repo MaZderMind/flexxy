@@ -32,3 +32,10 @@ import { $import } from './$import';
 #set($additionalProperties = $innerSchemas.get($schemaName).get('additionalProperties'))
 #parse("schemas/schemaBody.vm")
 #end
+#foreach($enum in $enums)
+
+/**
+ * Values for {@link $enum.schemaName#$enum.propertyName}
+ */
+#parse('schemas/enumSchema.vm')
+#end
