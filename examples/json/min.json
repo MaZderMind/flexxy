@@ -1,0 +1,248 @@
+{
+	"openapi": "3.0.1",
+	"info": {
+		"title": "Jira Software Cloud API",
+		"description": "Jira Software Cloud REST API documentation",
+		"termsOfService": "http://atlassian.com/terms/",
+		"contact": {
+			"url": "https://getsupport.atlassian.com"
+		},
+		"license": {
+			"name": "Apache 2.0",
+			"url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+		},
+		"version": "1001.0.0"
+	},
+	"externalDocs": {
+		"description": "Find out more about Atlassian products and services.",
+		"url": "http://www.atlassian.com"
+	},
+	"servers": [
+		{
+			"url": "https://your-domain.atlassian.com"
+		}
+	],
+	"tags": [],
+	"paths": {},
+	"components": {
+		"schemas": {
+			"Board": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "integer",
+						"description": "The ID of the board.",
+						"format": "int64"
+					},
+					"name": {
+						"type": "string",
+						"description": "The name of the board."
+					},
+					"admins": {
+						"readOnly": true,
+						"allOf": [
+							{
+								"type": "object",
+								"properties": {
+									"users": {
+										"type": "array",
+										"items": {
+											"type": "object",
+											"properties": {
+												"key": {
+													"type": "string",
+													"description": "This property is deprecated in favor of `accountId` because of privacy changes. See the [migration guide](https://developer.atlassian.com/cloud/jira/platform/deprecation-notice-user-privacy-api-migration-guide/) for details.  \nThe key of the user."
+												},
+												"self": {
+													"type": "string",
+													"description": "The URL of the user.",
+													"format": "uri"
+												},
+												"name": {
+													"type": "string",
+													"description": "This property is deprecated in favor of `accountId` because of privacy changes. See the [migration guide](https://developer.atlassian.com/cloud/jira/platform/deprecation-notice-user-privacy-api-migration-guide/) for details.  \nThe username of the user."
+												},
+												"displayName": {
+													"type": "string",
+													"description": "The display name of the user. Depending on the user’s privacy setting, this may return an alternative value."
+												},
+												"active": {
+													"type": "boolean",
+													"description": "Whether the user is active."
+												},
+												"accountId": {
+													"maxLength": 128,
+													"type": "string",
+													"description": "The account ID of the user, which uniquely identifies the user across all Atlassian products. For example, *5b10ac8d82e05b22cc7d4ef5*."
+												},
+												"avatarUrls": {
+													"description": "The avatars of the user.",
+													"allOf": [
+														{
+															"type": "object",
+															"properties": {
+																"24x24": {
+																	"type": "string",
+																	"description": "The URL of the user's 24x24 pixel avatar.",
+																	"format": "uri"
+																},
+																"32x32": {
+																	"type": "string",
+																	"description": "The URL of the user's 32x32 pixel avatar.",
+																	"format": "uri"
+																},
+																"48x48": {
+																	"type": "string",
+																	"description": "The URL of the user's 48x48 pixel avatar.",
+																	"format": "uri"
+																},
+																"16x16": {
+																	"type": "string",
+																	"description": "The URL of the user's 16x16 pixel avatar.",
+																	"format": "uri"
+																}
+															},
+															"additionalProperties": false
+														}
+													]
+												}
+											},
+											"additionalProperties": false
+										}
+									},
+									"groups": {
+										"type": "array",
+										"items": {
+											"type": "object",
+											"properties": {
+												"name": {
+													"type": "string"
+												},
+												"self": {
+													"type": "string",
+													"format": "uri"
+												}
+											},
+											"additionalProperties": false
+										}
+									}
+								},
+								"additionalProperties": false,
+								"description": "The users and groups who own the board."
+							}
+						]
+					},
+					"location": {
+						"type": "object",
+						"properties": {
+							"projectId": {
+								"type": "integer",
+								"format": "int64"
+							},
+							"userId": {
+								"type": "integer",
+								"format": "int64"
+							},
+							"userAccountId": {
+								"type": "string"
+							},
+							"displayName": {
+								"type": "string"
+							},
+							"projectName": {
+								"type": "string"
+							},
+							"projectKey": {
+								"type": "string"
+							},
+							"projectTypeKey": {
+								"type": "string"
+							},
+							"avatarURI": {
+								"type": "string",
+								"format": "uri"
+							},
+							"name": {
+								"type": "string"
+							}
+						},
+						"additionalProperties": false,
+						"description": "The container that the board is located in."
+					}
+				},
+				"additionalProperties": false,
+				"description": "Details about a board."
+			},
+			"WorkflowCondition": {
+				"type": "object",
+				"additionalProperties": false,
+				"description": "The workflow transition rule conditions tree.",
+				"discriminator": {
+					"propertyName": "nodeType",
+					"mapping": {
+						"simple": "#/components/schemas/WorkflowSimpleCondition",
+						"compound": "#/components/schemas/WorkflowCompoundCondition"
+					}
+				},
+				"oneOf": [
+					{
+						"$ref": "#/components/schemas/WorkflowSimpleCondition"
+					},
+					{
+						"$ref": "#/components/schemas/WorkflowCompoundCondition"
+					}
+				]
+			},
+			"WorkflowSimpleCondition": {
+				"required": [
+					"nodeType",
+					"type"
+				],
+				"type": "object",
+				"properties": {
+					"type": {
+						"type": "string",
+						"description": "The type of the transition rule."
+					},
+					"configuration": {
+						"type": "object",
+						"description": "EXPERIMENTAL. The configuration of the transition rule."
+					},
+					"nodeType": {
+						"type": "string"
+					}
+				},
+				"description": "A workflow transition rule condition. This object returns `nodeType` as `simple`."
+			},
+			"WorkflowCompoundCondition": {
+				"required": [
+					"conditions",
+					"nodeType",
+					"operator"
+				],
+				"type": "object",
+				"properties": {
+					"operator": {
+						"type": "string",
+						"description": "The compound condition operator.",
+						"enum": [
+							"AND",
+							"OR"
+						]
+					},
+					"conditions": {
+						"type": "array",
+						"description": "The list of workflow conditions.",
+						"items": {
+							"$ref": "#/components/schemas/WorkflowCondition"
+						}
+					},
+					"nodeType": {
+						"type": "string"
+					}
+				},
+				"description": "A compound workflow transition rule condition. This object returns `nodeType` as `compound`."
+			}
+		}
+	}
+}

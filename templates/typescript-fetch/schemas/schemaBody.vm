@@ -1,0 +1,12 @@
+#if($schema.description)
+/**
+ * $schema.description
+ */
+#end
+#if($schema.type == 'object' && ($schema.oneOf || $schema.allOf || $schema.anyOf))
+    #parse('schemas/compoundSchema.vm')
+#elseif($schema.type == 'object')
+    #parse('schemas/objectSchema.vm')
+#elseif($schema.type == 'string' && $schema.enum)
+    #parse('schemas/enumSchema.vm')
+#end

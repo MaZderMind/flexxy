@@ -1,3 +1,4 @@
+import com.google.common.collect.ImmutableMap
 import de.mazdermind.prettycodegen.preprocessor.CodeSlugify
 import de.mazdermind.prettycodegen.template.IPreprocessor
 import io.swagger.v3.oas.models.media.ArraySchema
@@ -8,8 +9,9 @@ import org.slf4j.LoggerFactory
 //def schemaPreprocessor = evaluate(new File("./preprocessor/SchemaPreprocessor.groovy"))
 
 // TODO Reusable enums
+// TODO Inline Objects
 class Preprocessor implements IPreprocessor {
-    def log = LoggerFactory.getLogger("de.mazdermind.prettycodegen.template.typescriptFetch.Preprocessor")
+    static log = LoggerFactory.getLogger("de.mazdermind.prettycodegen.template.typescriptFetch.Preprocessor")
     def schemaAliases = [:]
 
     static String stripRefPrefix(String $ref) {
@@ -50,41 +52,45 @@ class Preprocessor implements IPreprocessor {
     Map<String, Object> additionalSchemaTemplateArgs(String schemaName, Schema schema) {
         def imports = [] as Set<String>
         def enums = new ArrayList<Map<String, Object>>()
-        def properties = properties(schemaName, schema, imports, enums)
-        def additionalProperties = additionalProperties(schema, imports, schemaName, enums)
+        def innerSchemas = new LinkedHashMap<String, Map<String, Object>>()
+
+        def properties = properties(schemaName, schema, imports, enums, innerSchemas)
+        def additionalProperties = additionalProperties(schema, imports, schemaName, enums, innerSchemas)
 
         imports.remove(schemaName)
 
         log.debug("Properties for {}: {}", schemaName, properties)
         log.debug("Imports for {}: {}", schemaName, imports)
         log.debug("Enums for {}: {}", schemaName, enums)
+        log.debug("InnerSchemas for {}: {}", schemaName, innerSchemas.collect { it.key })
         log.debug("AdditionalProperties for {}: {}", schemaName, additionalProperties)
 
         return [
                 properties          : properties,
                 imports             : imports,
                 enums               : enums,
+                innerSchemas        : innerSchemas,
                 additionalProperties: additionalProperties,
         ]
     }
 
     static List<Map<String, Object>> properties(String schemaName, Schema schema, Set<String> imports,
-                                                List<Map<String, Object>> enums) {
+                                                List<Map<String, Object>> enums, HashMap<String, Map<String, Object>> innerSchemas) {
         schema.properties.collect {
             [
                     key        : it.key,
                     field      : quoteFieldIfNecessary(it.key),
                     description: sanitizeDescription(it.value.description),
                     required   : schema.required?.contains(it.key),
-                    type       : mapType(it.value, imports, schemaName, it.key, enums),
+                    type       : mapType(it.value, imports, schemaName, it.key, enums, innerSchemas),
             ]
         } as List<Map<String, Object>>
     }
 
     static String mapType(Schema schema, Set<String> imports, String schemaName, String propertyName,
-                          List<Map<String, Object>> enums) {
+                          List<Map<String, Object>> enums, HashMap<String, Map<String, Object>> innerSchemas) {
         if (schema.type == "string" && schema.enum) {
-            def enumName = "${schemaName}${propertyName.capitalize()}Enum"
+            def enumName = "${schemaName}${propertyName.capitalize()}"
             enums.add(propertyEnum(schemaName, propertyName, enumName, schema.enum))
             return enumName
         } else if (schema.type in ["string", "float", "number", "boolean"]) {
@@ -94,24 +100,21 @@ class Preprocessor implements IPreprocessor {
         } else if (schema instanceof ComposedSchema) {
             if (schema.allOf) {
                 return schema.allOf
-                        .collect { mapType(it, imports, schemaName, propertyName, enums) }
-                        .each { imports.add(it) }
+                        .collect { mapType(it, imports, schemaName, propertyName, enums, innerSchemas) }
                         .join(" & ")
             } else if (schema.anyOf) {
                 return schema.anyOf
-                        .collect { mapType(it, imports, schemaName, propertyName, enums) }
-                        .each { imports.add(it) }
+                        .collect { mapType(it, imports, schemaName, propertyName, enums, innerSchemas) }
                         .join(" | ")
             } else if (schema.oneOf) {
                 return schema.oneOf
-                        .collect { mapType(it, imports, schemaName, propertyName, enums) }
-                        .each { imports.add(it) }
+                        .collect { mapType(it, imports, schemaName, propertyName, enums, innerSchemas) }
                         .join(" | ")
             }
 
             return "any"
         } else if (schema instanceof ArraySchema) {
-            return mapType(schema.items, imports, schemaName, propertyName, enums) + '[]'
+            return mapType(schema.items, imports, schemaName, propertyName, enums, innerSchemas) + '[]'
         } else if (schema.$ref) {
             def schemaRef = stripRefPrefix(schema.$ref)
             imports.add(schemaRef)
@@ -119,12 +122,29 @@ class Preprocessor implements IPreprocessor {
         } else if (schema.additionalProperties && !schema.properties) {
             // Inline Dict
             if (schema.additionalProperties instanceof Schema) {
-                def additionalPropertiesType = mapType(schema.additionalProperties as Schema, imports, schemaName, propertyName, enums)
+                def additionalPropertiesType = mapType(schema.additionalProperties as Schema, imports, schemaName, propertyName, enums, innerSchemas)
                 return "{ [key: string]: ${additionalPropertiesType}; }"
             } else {
                 return "{ [key: string]: any; }"
             }
+        } else if (schema.type == "object" && schema.properties) {
+            def innerClassName = "${schemaName}${propertyName.capitalize()}"
+
+            def properties = properties(innerClassName, schema, imports, enums, innerSchemas)
+            def additionalProperties = additionalProperties(schema, imports, innerClassName, enums, innerSchemas)
+
+            log.debug("Properties for {}: {}", innerClassName, properties)
+            log.debug("Imports for {}: {}", innerClassName, imports)
+
+            innerSchemas.put(innerClassName.toString(), ImmutableMap.of(
+                    "schema", schema,
+                    "properties", properties,
+                    "additionalProperties", additionalProperties,
+            ))
+
+            return innerClassName
         }
+
 
         // FIXME additionalProperties only -> map to dict
         // FIXME additionalProperties + properties -> additional dict property
@@ -161,11 +181,11 @@ class Preprocessor implements IPreprocessor {
         return fieldKey
     }
 
-    static Object additionalProperties(Schema schema, Set<String> imports, String schemaName, List<Map<String, Object>> enums) {
+    static Object additionalProperties(Schema schema, Set<String> imports, String schemaName, List<Map<String, Object>> enums, HashMap<String, Map<String, Object>> innerSchemas) {
         if (schema.additionalProperties == null || schema.additionalProperties == false) {
             return false
         } else if (schema.additionalProperties instanceof Schema) {
-            return mapType(schema.additionalProperties as Schema, imports, schemaName, "AdditionalProperties", enums)
+            return mapType(schema.additionalProperties as Schema, imports, schemaName, "AdditionalProperties", enums, innerSchemas)
         } else {
             return "any"
         }

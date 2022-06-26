@@ -24,13 +24,11 @@ import { $import } from './$import';
 #end
 
 #end
-#if($schema.description)
-/**
- * $schema.description
- */
-#end
-#if($schema.type == 'object')
-    #parse('schemas/objectSchema.vm')
-#elseif($schema.type == 'string' && $schema.enum)
-    #parse('schemas/enumSchema.vm')
+#parse("schemas/schemaBody.vm")
+#foreach($schemaName in $innerSchemas.keySet())
+
+#set($schema = $innerSchemas.get($schemaName).get('schema'))
+#set($properties = $innerSchemas.get($schemaName).get('properties'))
+#set($additionalProperties = $innerSchemas.get($schemaName).get('additionalProperties'))
+#parse("schemas/schemaBody.vm")
 #end
