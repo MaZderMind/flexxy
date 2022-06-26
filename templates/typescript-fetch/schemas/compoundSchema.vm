@@ -1,1 +1,1 @@
-export type $schemaName = $compoundSchemaInfo
+export type $schemaName = $compoundSchema

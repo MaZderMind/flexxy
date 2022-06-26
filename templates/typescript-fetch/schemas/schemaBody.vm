@@ -3,10 +3,12 @@
  * $schema.description
  */
 #end
-#if($compoundSchemaInfo)
+#if($schemaType == 'compound')
     #parse('schemas/compoundSchema.vm')
-#elseif($schema.type == 'object')
-    #parse('schemas/objectSchema.vm')
-#elseif($schema.type == 'string' && $schema.enum)
+#elseif($schemaType == 'enum')
     #parse('schemas/enumSchema.vm')
+#elseif($schemaType == 'object')
+    #parse('schemas/objectSchema.vm')
+#elseif($schemaType == 'alias')
+    #parse('schemas/aliasSchema.vm')
 #end

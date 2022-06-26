@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory
 // TODO Reusable enums
 class Preprocessor implements IPreprocessor {
     static log = LoggerFactory.getLogger("de.mazdermind.prettycodegen.template.typescriptFetch.Preprocessor")
-    def schemaAliases = [:]
 
     static String stripRefPrefix(String $ref) {
         def prefix = "#/components/schemas/"
@@ -20,26 +19,6 @@ class Preprocessor implements IPreprocessor {
         }
 
         return null
-    }
-
-    @Override
-    void preprocessSchemas(Map<String, Schema> schemas) {
-        log.info("Generating Schema-Aliases Map")
-        schemas.each {
-            def schema = it.value
-
-            if (schema.type == 'string' && !schema.enum) {
-                // A String-Alias Type
-                schemaAliases[it.key] = 'string'
-            }
-        }
-        log.debug("Schema-Aliases: {}", schemaAliases)
-    }
-
-    @Override
-    boolean shouldGenerateSchema(String schemaName, Schema schema) {
-        // do not create Schema-Files for pure Aliases
-        return !schemaAliases.containsKey(schemaName)
     }
 
     @Override
@@ -55,30 +34,42 @@ class Preprocessor implements IPreprocessor {
 
         def properties = properties(schemaName, schema, imports, enums, innerSchemas)
         def additionalProperties = additionalProperties(schema, imports, schemaName, enums, innerSchemas)
-        String compoundSchemaInfo = null
-        if (schema instanceof ComposedSchema) {
-            compoundSchemaInfo = compoundSchema(schema, imports, schemaName, "", enums, innerSchemas)
-        }
 
         imports.remove(schemaName)
 
-        log.debug("Properties for {}: {}", schemaName, properties)
-        log.debug("Imports for {}: {}", schemaName, imports)
-        log.debug("Enums for {}: {}", schemaName, enums)
-        log.debug("InnerSchemas for {}: {}", schemaName, innerSchemas.collect { it.key })
-        log.debug("AdditionalProperties for {}: {}", schemaName, additionalProperties)
-        if (compoundSchemaInfo != null) {
-            log.debug("CompoundSchema for {}: {}", schemaName, compoundSchemaInfo)
-        }
 
-        return [
+        def baseInfo = [
                 properties          : properties,
                 imports             : imports,
                 enums               : enums,
                 innerSchemas        : innerSchemas,
                 additionalProperties: additionalProperties,
-                compoundSchemaInfo  : compoundSchemaInfo,
         ]
+
+        if (schema instanceof ComposedSchema) {
+            return [
+                    schemaType    : 'compound',
+                    compoundSchema: compoundSchema(schema, imports, schemaName, "", enums, innerSchemas),
+                    *             : baseInfo,
+            ]
+        } else if (schema.type == "string" && schema.enum) {
+            return [
+                    schemaType: 'enum',
+                    enum      : propertyEnum(schemaName, "", schemaName, schema.enum),
+                    *         : baseInfo,
+            ]
+        } else if (schema.type == "object" && schema.properties) {
+            return [
+                    schemaType: 'object',
+                    *         : baseInfo,
+            ]
+        } else {
+            return [
+                    schemaType: 'alias',
+                    alias     : mapType(schema, imports, schemaName, "", enums, innerSchemas),
+                    *         : baseInfo,
+            ]
+        }
     }
 
     static List<Map<String, Object>> properties(String schemaName, Schema schema, Set<String> imports,
@@ -163,7 +154,7 @@ class Preprocessor implements IPreprocessor {
         return "any"
     }
 
-    static TreeMap<String, Object> propertyEnum(String schemaName, String propertyName, enumName, List<String> enumItems) {
+    static Map<String, Object> propertyEnum(String schemaName, String propertyName, enumName, List<String> enumItems) {
         [
                 schemaName  : schemaName,
                 propertyName: propertyName,
