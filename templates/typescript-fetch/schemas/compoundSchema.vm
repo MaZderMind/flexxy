@@ -1,1 +1,1 @@
-export type $schemaName = any; // FIXME compound schemas
+export type $schemaName = $compoundSchemaInfo

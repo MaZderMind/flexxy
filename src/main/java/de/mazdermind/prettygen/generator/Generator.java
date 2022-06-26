@@ -12,8 +12,6 @@ import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
 
-import com.google.common.collect.ImmutableMap;
-
 import de.mazdermind.prettygen.Configuration;
 import de.mazdermind.prettygen.generator.exceptions.SwaggerParseException;
 import de.mazdermind.prettygen.template.GeneratorTemplate;
@@ -70,12 +68,11 @@ public class Generator {
 		log.debug("Preprocessor provided additional Template-Args: {}", additionalTemplateArgs);
 
 		log.debug("Rendering Template for Schema {}", schemaName);
-		ImmutableMap<String, Object> context = ImmutableMap.<String, Object>builder()
-				.put("info", openApi.getInfo())
-				.put("schema", schema)
-				.put("schemaName", schemaName)
-				.putAll(additionalTemplateArgs)
-				.build();
+		Map<String, Object> context = new HashMap<>();
+		context.put("info", openApi.getInfo());
+		context.put("schema", schema);
+		context.put("schemaName", schemaName);
+		context.putAll(additionalTemplateArgs);
 
 		String output = renderTemplate(generatorTemplate.getSchemaTemplate(), context);
 

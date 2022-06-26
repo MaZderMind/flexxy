@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory
 //def schemaPreprocessor = evaluate(new File("./preprocessor/SchemaPreprocessor.groovy"))
 
 // TODO Reusable enums
-// TODO Inline Objects
 class Preprocessor implements IPreprocessor {
     static log = LoggerFactory.getLogger("de.mazdermind.prettycodegen.template.typescriptFetch.Preprocessor")
     def schemaAliases = [:]
@@ -56,6 +55,10 @@ class Preprocessor implements IPreprocessor {
 
         def properties = properties(schemaName, schema, imports, enums, innerSchemas)
         def additionalProperties = additionalProperties(schema, imports, schemaName, enums, innerSchemas)
+        String compoundSchemaInfo = null
+        if (schema instanceof ComposedSchema) {
+            compoundSchemaInfo = compoundSchema(schema, imports, schemaName, "", enums, innerSchemas)
+        }
 
         imports.remove(schemaName)
 
@@ -64,6 +67,9 @@ class Preprocessor implements IPreprocessor {
         log.debug("Enums for {}: {}", schemaName, enums)
         log.debug("InnerSchemas for {}: {}", schemaName, innerSchemas.collect { it.key })
         log.debug("AdditionalProperties for {}: {}", schemaName, additionalProperties)
+        if (compoundSchemaInfo != null) {
+            log.debug("CompoundSchema for {}: {}", schemaName, compoundSchemaInfo)
+        }
 
         return [
                 properties          : properties,
@@ -71,6 +77,7 @@ class Preprocessor implements IPreprocessor {
                 enums               : enums,
                 innerSchemas        : innerSchemas,
                 additionalProperties: additionalProperties,
+                compoundSchemaInfo  : compoundSchemaInfo,
         ]
     }
 
@@ -98,21 +105,7 @@ class Preprocessor implements IPreprocessor {
         } else if (schema.type in ["integer"]) {
             return "number"
         } else if (schema instanceof ComposedSchema) {
-            if (schema.allOf) {
-                return schema.allOf
-                        .collect { mapType(it, imports, schemaName, propertyName, enums, innerSchemas) }
-                        .join(" & ")
-            } else if (schema.anyOf) {
-                return schema.anyOf
-                        .collect { mapType(it, imports, schemaName, propertyName, enums, innerSchemas) }
-                        .join(" | ")
-            } else if (schema.oneOf) {
-                return schema.oneOf
-                        .collect { mapType(it, imports, schemaName, propertyName, enums, innerSchemas) }
-                        .join(" | ")
-            }
-
-            return "any"
+            return compoundSchema(schema, imports, schemaName, propertyName, enums, innerSchemas)
         } else if (schema instanceof ArraySchema) {
             return mapType(schema.items, imports, schemaName, propertyName, enums, innerSchemas) + '[]'
         } else if (schema.$ref) {
@@ -148,6 +141,24 @@ class Preprocessor implements IPreprocessor {
 
         // FIXME additionalProperties only -> map to dict
         // FIXME additionalProperties + properties -> additional dict property
+
+        return "any"
+    }
+
+    private static String compoundSchema(ComposedSchema schema, Set<String> imports, String schemaName, String propertyName, List<Map<String, Object>> enums, HashMap<String, Map<String, Object>> innerSchemas) {
+        if (schema.allOf) {
+            return schema.allOf
+                    .collect { mapType(it, imports, schemaName, propertyName, enums, innerSchemas) }
+                    .join(" & ")
+        } else if (schema.anyOf) {
+            return schema.anyOf
+                    .collect { mapType(it, imports, schemaName, propertyName, enums, innerSchemas) }
+                    .join(" | ")
+        } else if (schema.oneOf) {
+            return schema.oneOf
+                    .collect { mapType(it, imports, schemaName, propertyName, enums, innerSchemas) }
+                    .join(" | ")
+        }
 
         return "any"
     }
