@@ -1,4 +1,4 @@
-package de.mazdermind.prettycodegen.generator;
+package de.mazdermind.prettygen.generator;
 
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
@@ -14,10 +14,10 @@ import org.apache.velocity.app.Velocity;
 
 import com.google.common.collect.ImmutableMap;
 
-import de.mazdermind.prettycodegen.Configuration;
-import de.mazdermind.prettycodegen.generator.exceptions.SwaggerParseException;
-import de.mazdermind.prettycodegen.template.GeneratorTemplate;
-import de.mazdermind.prettycodegen.template.TemplateLoader;
+import de.mazdermind.prettygen.Configuration;
+import de.mazdermind.prettygen.generator.exceptions.SwaggerParseException;
+import de.mazdermind.prettygen.template.GeneratorTemplate;
+import de.mazdermind.prettygen.template.TemplateLoader;
 import io.swagger.parser.OpenAPIParser;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.media.Schema;

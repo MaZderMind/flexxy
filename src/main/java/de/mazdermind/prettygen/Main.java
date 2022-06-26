@@ -1,4 +1,4 @@
-package de.mazdermind.prettycodegen;
+package de.mazdermind.prettygen;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -11,7 +11,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
 
-import de.mazdermind.prettycodegen.generator.Generator;
+import de.mazdermind.prettygen.generator.Generator;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

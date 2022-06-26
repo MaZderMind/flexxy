@@ -1,6 +1,6 @@
 import com.google.common.collect.ImmutableMap
-import de.mazdermind.prettycodegen.preprocessor.CodeSlugify
-import de.mazdermind.prettycodegen.template.IPreprocessor
+import de.mazdermind.prettygen.preprocessor.CodeSlugify
+import de.mazdermind.prettygen.template.IPreprocessor
 import io.swagger.v3.oas.models.media.ArraySchema
 import io.swagger.v3.oas.models.media.ComposedSchema
 import io.swagger.v3.oas.models.media.Schema

@@ -1,4 +1,4 @@
-package de.mazdermind.prettycodegen;
+package de.mazdermind.prettygen;
 
 import java.util.Map;
 

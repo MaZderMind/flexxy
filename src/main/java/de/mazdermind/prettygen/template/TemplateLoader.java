@@ -1,4 +1,4 @@
-package de.mazdermind.prettycodegen.template;
+package de.mazdermind.prettygen.template;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,8 +16,8 @@ import org.apache.velocity.app.VelocityEngine;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import de.mazdermind.prettycodegen.template.exceptions.GeneratorPreprocessorException;
-import de.mazdermind.prettycodegen.template.exceptions.GeneratorTemplateException;
+import de.mazdermind.prettygen.template.exceptions.GeneratorPreprocessorException;
+import de.mazdermind.prettygen.template.exceptions.GeneratorTemplateException;
 import groovy.lang.GroovyShell;
 import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;

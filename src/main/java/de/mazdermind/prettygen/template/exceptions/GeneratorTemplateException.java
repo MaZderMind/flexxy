@@ -1,4 +1,4 @@
-package de.mazdermind.prettycodegen.template.exceptions;
+package de.mazdermind.prettygen.template.exceptions;
 
 public class GeneratorTemplateException extends RuntimeException {
 	public GeneratorTemplateException(String message) {

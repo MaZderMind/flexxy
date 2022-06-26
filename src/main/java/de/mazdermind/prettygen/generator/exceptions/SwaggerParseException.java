@@ -1,4 +1,4 @@
-package de.mazdermind.prettycodegen.generator.exceptions;
+package de.mazdermind.prettygen.generator.exceptions;
 
 import java.util.List;
 

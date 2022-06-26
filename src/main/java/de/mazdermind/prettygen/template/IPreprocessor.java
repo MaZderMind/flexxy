@@ -1,9 +1,9 @@
-package de.mazdermind.prettycodegen.template;
+package de.mazdermind.prettygen.template;
 
 import java.util.Collections;
 import java.util.Map;
 
-import de.mazdermind.prettycodegen.Configuration;
+import de.mazdermind.prettygen.Configuration;
 import io.swagger.v3.oas.models.media.Schema;
 
 public interface IPreprocessor {

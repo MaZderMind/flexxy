@@ -1,4 +1,4 @@
-package de.mazdermind.prettycodegen.generator.model;
+package de.mazdermind.prettygen.generator.model;
 
 public class Name {
 	private final String name;

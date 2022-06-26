@@ -1,4 +1,4 @@
-package de.mazdermind.prettycodegen.preprocessor;
+package de.mazdermind.prettygen.preprocessor;
 
 import java.util.Arrays;
 import java.util.List;
