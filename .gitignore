@@ -3,3 +3,4 @@
 /.zsh
 /target
 /examples/output
+.DS_Store
