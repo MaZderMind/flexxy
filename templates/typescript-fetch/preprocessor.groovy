@@ -87,7 +87,7 @@ class Preprocessor implements IPreprocessor {
     static String mapType(Schema schema, Set<String> imports, String schemaName, String propertyName,
                           List<Map<String, Object>> enums, HashMap<String, Map<String, Object>> innerSchemas) {
         if (schema.type == "string" && schema.enum) {
-            def enumName = "${schemaName}${propertyName.capitalize()}"
+            def enumName = "${schemaName}${propertyName.capitalize()}Enum"
             enums.add(propertyEnum(schemaName, propertyName, enumName, schema.enum))
             return enumName
         } else if (schema.type in ["string", "float", "number", "boolean"]) {
@@ -111,10 +111,11 @@ class Preprocessor implements IPreprocessor {
                 return "{ [key: string]: any; }"
             }
         } else if (schema.type == "object" && schema.properties) {
-            def innerClassName = "${schemaName}${propertyName.capitalize()}Type"
+            def innerClassPrefix = "${schemaName}${propertyName.capitalize()}"
+            def innerClassName = "${innerClassPrefix}Type"
 
-            def properties = properties(innerClassName, schema, imports, enums, innerSchemas)
-            def additionalProperties = additionalProperties(schema, imports, innerClassName, enums, innerSchemas)
+            def properties = properties(innerClassPrefix, schema, imports, enums, innerSchemas)
+            def additionalProperties = additionalProperties(schema, imports, innerClassPrefix, enums, innerSchemas)
 
             innerSchemas.put(innerClassName.toString(), ImmutableMap.of(
                     "schema", schema,
@@ -129,21 +130,30 @@ class Preprocessor implements IPreprocessor {
     }
 
     private static String compoundSchema(ComposedSchema schema, Set<String> imports, String schemaName, String propertyName, List<Map<String, Object>> enums, HashMap<String, Map<String, Object>> innerSchemas) {
+        String combiner;
+        List<Schema> items;
         if (schema.allOf) {
-            return schema.allOf
-                    .collect { mapType(it, imports, schemaName, propertyName, enums, innerSchemas) }
-                    .join(" & ")
+            combiner = " & "
+            items = schema.allOf
         } else if (schema.anyOf) {
-            return schema.anyOf
-                    .collect { mapType(it, imports, schemaName, propertyName, enums, innerSchemas) }
-                    .join(" | ")
+            combiner = " | "
+            items = schema.anyOf
         } else if (schema.oneOf) {
-            return schema.oneOf
-                    .collect { mapType(it, imports, schemaName, propertyName, enums, innerSchemas) }
-                    .join(" | ")
+            combiner = " | "
+            items = schema.oneOf
+        } else {
+            return "any"
         }
 
-        return "any"
+        def single = items.size() == 1
+
+        return items
+                .withIndex()
+                .collect { it, index ->
+                    def proprtyName = single ? propertyName : "${propertyName}Part${index + 1}"
+                    mapType(it, imports, schemaName, proprtyName, enums, innerSchemas)
+                }
+                .join(combiner)
     }
 
     static Map<String, Object> propertyEnum(String schemaName, String propertyName, enumName, List<String> enumItems) {
