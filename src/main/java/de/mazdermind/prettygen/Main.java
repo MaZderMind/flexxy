@@ -7,9 +7,9 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.cli.PosixParser;
 
 import de.mazdermind.prettygen.generator.Generator;
 import lombok.extern.slf4j.Slf4j;
@@ -42,7 +42,7 @@ public class Main {
 		options.addOption("o", "option", true, "Template-Specific Option\n" +
 				"Example: -opackage=de.mazdermind.foo");
 
-		CommandLineParser parser = new PosixParser();
+		CommandLineParser parser = new DefaultParser();
 		try {
 			return parser.parse(options, args);
 		} catch (ParseException parseException) {
