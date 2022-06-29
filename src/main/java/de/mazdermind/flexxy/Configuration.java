@@ -1,4 +1,4 @@
-package de.mazdermind.prettygen;
+package de.mazdermind.flexxy;
 
 import java.util.Map;
 

@@ -1,4 +1,4 @@
-package de.mazdermind.prettygen;
+package de.mazdermind.flexxy;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -11,7 +11,7 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
-import de.mazdermind.prettygen.generator.Generator;
+import de.mazdermind.flexxy.generator.Generator;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

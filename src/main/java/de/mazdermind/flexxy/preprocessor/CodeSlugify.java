@@ -1,4 +1,4 @@
-package de.mazdermind.prettygen.preprocessor;
+package de.mazdermind.flexxy.preprocessor;
 
 import java.util.Arrays;
 import java.util.List;

@@ -1,9 +1,9 @@
-package de.mazdermind.prettygen.template;
+package de.mazdermind.flexxy.template;
 
 import java.util.Collections;
 import java.util.Map;
 
-import de.mazdermind.prettygen.Configuration;
+import de.mazdermind.flexxy.Configuration;
 import io.swagger.v3.oas.models.media.Schema;
 
 public interface IPreprocessor {

@@ -1,4 +1,4 @@
-package de.mazdermind.prettygen.template.exceptions;
+package de.mazdermind.flexxy.template.exceptions;
 
 public class GeneratorPreprocessorException extends RuntimeException {
 	public GeneratorPreprocessorException(String message) {

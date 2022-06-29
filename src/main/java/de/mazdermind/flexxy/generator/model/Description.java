@@ -1,4 +1,4 @@
-package de.mazdermind.prettygen.generator.model;
+package de.mazdermind.flexxy.generator.model;
 
 public class Description {
 	private final String comment;

@@ -1,4 +1,4 @@
-package de.mazdermind.prettygen.generator;
+package de.mazdermind.flexxy.generator;
 
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
@@ -12,10 +12,10 @@ import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
 
-import de.mazdermind.prettygen.Configuration;
-import de.mazdermind.prettygen.generator.exceptions.SwaggerParseException;
-import de.mazdermind.prettygen.template.GeneratorTemplate;
-import de.mazdermind.prettygen.template.TemplateLoader;
+import de.mazdermind.flexxy.Configuration;
+import de.mazdermind.flexxy.generator.exceptions.SwaggerParseException;
+import de.mazdermind.flexxy.template.GeneratorTemplate;
+import de.mazdermind.flexxy.template.TemplateLoader;
 import io.swagger.parser.OpenAPIParser;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.media.Schema;

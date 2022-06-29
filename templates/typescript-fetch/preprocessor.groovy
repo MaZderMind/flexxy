@@ -1,6 +1,6 @@
 import com.google.common.collect.ImmutableMap
-import de.mazdermind.prettygen.preprocessor.CodeSlugify
-import de.mazdermind.prettygen.template.IPreprocessor
+import de.mazdermind.flexxy.preprocessor.CodeSlugify
+import de.mazdermind.flexxy.template.IPreprocessor
 import io.swagger.v3.oas.models.media.ArraySchema
 import io.swagger.v3.oas.models.media.ComposedSchema
 import io.swagger.v3.oas.models.media.Schema
@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory
 //def schemaPreprocessor = evaluate(new File("./preprocessor/SchemaPreprocessor.groovy"))
 
 class Preprocessor implements IPreprocessor {
-    static log = LoggerFactory.getLogger("de.mazdermind.prettycodegen.template.typescriptFetch.Preprocessor")
+    static log = LoggerFactory.getLogger("de.mazdermind.flexxy.template.typescript-fetch.Preprocessor")
 
     static String stripRefPrefix(String $ref) {
         def prefix = "#/components/schemas/"

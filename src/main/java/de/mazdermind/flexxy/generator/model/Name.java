@@ -1,4 +1,4 @@
-package de.mazdermind.prettygen.generator.model;
+package de.mazdermind.flexxy.generator.model;
 
 public class Name {
 	private final String name;

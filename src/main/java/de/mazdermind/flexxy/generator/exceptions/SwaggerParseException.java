@@ -1,4 +1,4 @@
-package de.mazdermind.prettygen.generator.exceptions;
+package de.mazdermind.flexxy.generator.exceptions;
 
 import java.util.List;
 
