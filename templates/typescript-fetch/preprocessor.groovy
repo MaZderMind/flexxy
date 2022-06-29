@@ -6,8 +6,6 @@ import io.swagger.v3.oas.models.media.ComposedSchema
 import io.swagger.v3.oas.models.media.Schema
 import org.slf4j.LoggerFactory
 
-//def schemaPreprocessor = evaluate(new File("./preprocessor/SchemaPreprocessor.groovy"))
-
 class Preprocessor implements IPreprocessor {
     static log = LoggerFactory.getLogger("de.mazdermind.flexxy.template.typescript-fetch.Preprocessor")
 
